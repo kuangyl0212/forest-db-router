@@ -3,7 +3,11 @@ package cn.forest.util.dbrouter.config;
 import cn.forest.util.dbrouter.DbRouterConfig;
 import cn.forest.util.dbrouter.DynamicDataSource;
 import cn.forest.util.dbrouter.aspects.DbRouterJoinPoint;
+import cn.forest.util.dbrouter.interceptor.MybatisRouterInterceptor;
+import cn.forest.util.dbrouter.strategy.FibonacciHashRouterStrategy;
+import cn.forest.util.dbrouter.strategy.IDbRouterStrategy;
 import cn.forest.util.dbrouter.util.PropertyUtil;
+import org.apache.ibatis.plugin.Interceptor;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.EnvironmentAware;
@@ -42,8 +46,18 @@ public class ForestDbRouterAutoConfiguration implements EnvironmentAware {
 
     @Bean("db-router-join-point")
     @ConditionalOnMissingBean
-    public DbRouterJoinPoint joinPoint(DbRouterConfig dbRouterConfig) {
-        return new DbRouterJoinPoint(dbRouterConfig);
+    public DbRouterJoinPoint joinPoint(DbRouterConfig dbRouterConfig, IDbRouterStrategy routerStrategy) {
+        return new DbRouterJoinPoint(dbRouterConfig, routerStrategy);
+    }
+
+    @Bean
+    public Interceptor routerPlugin() {
+        return new MybatisRouterInterceptor();
+    }
+
+    @Bean
+    public IDbRouterStrategy dbRouterStrategy(DbRouterConfig dbRouterConfig) {
+        return new FibonacciHashRouterStrategy(dbRouterConfig);
     }
 
     @Bean
